@@ -1,0 +1,9 @@
+# Dependencias extra que se instalan DENTRO de la imagen de Airflow.
+#
+# Importante: lo que tengas instalado con pip en Windows NO existe dentro
+# del contenedor. Toda libreria que use tu pipeline debe estar aqui.
+#
+# La imagen base apache/airflow ya incluye: pandas, numpy, PyYAML, sqlalchemy,
+# requests, jinja2... Solo agrega lo que falte.
+
+openpyxl==3.1.5

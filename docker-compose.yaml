@@ -1,0 +1,179 @@
+---
+# Apache Airflow 3.4.0 - entorno local de desarrollo
+#
+# Basado en el docker-compose.yaml oficial de Airflow:
+#   https://airflow.apache.org/docs/apache-airflow/stable/docker-compose.yaml
+#
+# Diferencias con el oficial (pensadas para un portatil con ~8 GB de RAM):
+#   - LocalExecutor en lugar de CeleryExecutor
+#   - sin redis y sin airflow-worker (el scheduler ejecuta las tareas)
+#   - limites de memoria por servicio
+#   - imagen propia construida desde ./Dockerfile
+#
+# ADVERTENCIA: configuracion para desarrollo local, NO para produccion.
+
+x-airflow-common:
+  &airflow-common
+  build:
+    context: .
+    dockerfile: Dockerfile
+  image: ${AIRFLOW_IMAGE_NAME:-airflow-medallon:3.4.0}
+  env_file:
+    - ${ENV_FILE_PATH:-.env}
+  environment:
+    &airflow-common-env
+    AIRFLOW__CORE__EXECUTOR: LocalExecutor
+    AIRFLOW__CORE__AUTH_MANAGER: airflow.providers.fab.auth_manager.fab_auth_manager.FabAuthManager
+    AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg://airflow:airflow@postgres/airflow
+    AIRFLOW__CORE__FERNET_KEY: ${FERNET_KEY}
+    AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'true'
+    AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
+    AIRFLOW__CORE__DEFAULT_TIMEZONE: 'America/Bogota'
+    AIRFLOW__CORE__EXECUTION_API_SERVER_URL: 'http://airflow-apiserver:8080/execution/'
+    AIRFLOW__API_AUTH__JWT_SECRET: ${AIRFLOW__API_AUTH__JWT_SECRET:-airflow_jwt_secret}
+    AIRFLOW__API_AUTH__JWT_ISSUER: ${AIRFLOW__API_AUTH__JWT_ISSUER:-airflow}
+    AIRFLOW__SCHEDULER__ENABLE_HEALTH_CHECK: 'true'
+    AIRFLOW__DAG_PROCESSOR__REFRESH_INTERVAL: '30'
+    AIRFLOW_CONFIG: '/opt/airflow/config/airflow.cfg'
+    # El codigo del pipeline vive en include/ y se importa como paquete "medallon"
+    PYTHONPATH: '/opt/airflow/include'
+    DATA_DIR: '/opt/airflow/data'
+    PYTHONUNBUFFERED: '1'
+  volumes:
+    - ${AIRFLOW_PROJ_DIR:-.}/dags:/opt/airflow/dags
+    - ${AIRFLOW_PROJ_DIR:-.}/logs:/opt/airflow/logs
+    - ${AIRFLOW_PROJ_DIR:-.}/config:/opt/airflow/config
+    - ${AIRFLOW_PROJ_DIR:-.}/plugins:/opt/airflow/plugins
+    - ${AIRFLOW_PROJ_DIR:-.}/include:/opt/airflow/include
+    - ${AIRFLOW_PROJ_DIR:-.}/data:/opt/airflow/data
+  user: "${AIRFLOW_UID:-50000}:0"
+  depends_on:
+    &airflow-common-depends-on
+    postgres:
+      condition: service_healthy
+
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: airflow
+      POSTGRES_PASSWORD: airflow
+      POSTGRES_DB: airflow
+    volumes:
+      - postgres-db-volume:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "airflow"]
+      interval: 10s
+      retries: 5
+      start_period: 5s
+    shm_size: 256mb
+    mem_limit: 512m
+    restart: always
+
+  airflow-apiserver:
+    <<: *airflow-common
+    command: api-server
+    ports:
+      # El 8080 del equipo ya lo usa pgadmin_container; usamos 8081.
+      # Cambia AIRFLOW_UI_PORT en .env si necesitas otro puerto.
+      - "${AIRFLOW_UI_PORT:-8081}:8080"
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:8080/api/v2/monitor/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    mem_limit: 1g
+    restart: always
+    depends_on:
+      <<: *airflow-common-depends-on
+      airflow-init:
+        condition: service_completed_successfully
+
+  airflow-scheduler:
+    <<: *airflow-common
+    command: scheduler
+    healthcheck:
+      test: ["CMD-SHELL", 'airflow jobs check --job-type SchedulerJob --hostname "$${HOSTNAME}"']
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    mem_limit: 1g
+    restart: always
+    depends_on:
+      <<: *airflow-common-depends-on
+      airflow-init:
+        condition: service_completed_successfully
+
+  airflow-dag-processor:
+    <<: *airflow-common
+    command: dag-processor
+    healthcheck:
+      test: ["CMD-SHELL", 'airflow jobs check --job-type DagProcessorJob --hostname "$${HOSTNAME}"']
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    mem_limit: 512m
+    restart: always
+    depends_on:
+      <<: *airflow-common-depends-on
+      airflow-init:
+        condition: service_completed_successfully
+
+  airflow-triggerer:
+    <<: *airflow-common
+    command: triggerer
+    healthcheck:
+      test: ["CMD-SHELL", 'airflow jobs check --job-type TriggererJob --hostname "$${HOSTNAME}"']
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    mem_limit: 384m
+    restart: always
+    depends_on:
+      <<: *airflow-common-depends-on
+      airflow-init:
+        condition: service_completed_successfully
+
+  airflow-init:
+    <<: *airflow-common
+    entrypoint: /bin/bash
+    command:
+      - -c
+      - |
+        set -e
+        echo "Airflow version:"
+        airflow version
+        echo
+        echo "Creando carpetas compartidas..."
+        mkdir -p /opt/airflow/{logs,dags,plugins,config,data}
+        echo
+        echo "Migrando la base de datos..."
+        airflow db migrate
+        echo
+        echo "Creando usuario administrador (si no existe)..."
+        airflow users create \
+          --role Admin \
+          --username "$${_AIRFLOW_WWW_USER_USERNAME:-airflow}" \
+          --password "$${_AIRFLOW_WWW_USER_PASSWORD:-airflow}" \
+          --firstname Airflow \
+          --lastname Admin \
+          --email admin@example.com || true
+        echo
+        echo "Generando config/airflow.cfg si no existe..."
+        airflow config list > /dev/null
+        echo
+        echo "Ajustando permisos..."
+        chown -R "$${AIRFLOW_UID:-50000}:0" /opt/airflow/logs /opt/airflow/dags \
+          /opt/airflow/plugins /opt/airflow/config /opt/airflow/data /opt/airflow/include || true
+        echo
+        echo "Listo. airflow-init terminado."
+    user: "0:0"
+    mem_limit: 1g
+    restart: "no"
+
+volumes:
+  postgres-db-volume:

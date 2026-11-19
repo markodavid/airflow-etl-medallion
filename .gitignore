@@ -1,0 +1,39 @@
+# Entorno
+.env
+
+# Airflow
+logs/*
+!logs/.gitkeep
+config/airflow.cfg
+plugins/*
+!plugins/.gitkeep
+
+# Artefactos del pipeline (se regeneran en cada ejecucion)
+data/silver/*
+!data/silver/.gitkeep
+data/gold/*
+!data/gold/.gitkeep
+data/warehouse/*
+!data/warehouse/.gitkeep
+data/aire/bronze/*
+!data/aire/bronze/.gitkeep
+data/aire/silver/*
+!data/aire/silver/.gitkeep
+data/aire/gold/*
+!data/aire/gold/.gitkeep
+data/aire/warehouse/*
+!data/aire/warehouse/.gitkeep
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+
+# Editores / sistema
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
