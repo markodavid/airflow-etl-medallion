@@ -80,7 +80,7 @@ services:
     healthcheck:
       test: ["CMD", "curl", "--fail", "http://localhost:8080/api/v2/monitor/health"]
       interval: 30s
-      timeout: 10s
+      timeout: 30s
       retries: 5
       start_period: 60s
     mem_limit: 1g
@@ -96,7 +96,7 @@ services:
     healthcheck:
       test: ["CMD-SHELL", 'airflow jobs check --job-type SchedulerJob --hostname "$${HOSTNAME}"']
       interval: 30s
-      timeout: 10s
+      timeout: 30s
       retries: 5
       start_period: 60s
     mem_limit: 1g
@@ -112,7 +112,7 @@ services:
     healthcheck:
       test: ["CMD-SHELL", 'airflow jobs check --job-type DagProcessorJob --hostname "$${HOSTNAME}"']
       interval: 30s
-      timeout: 10s
+      timeout: 30s
       retries: 5
       start_period: 60s
     mem_limit: 512m
@@ -128,10 +128,10 @@ services:
     healthcheck:
       test: ["CMD-SHELL", 'airflow jobs check --job-type TriggererJob --hostname "$${HOSTNAME}"']
       interval: 30s
-      timeout: 10s
+      timeout: 30s
       retries: 5
       start_period: 60s
-    mem_limit: 384m
+    mem_limit: 768m
     restart: always
     depends_on:
       <<: *airflow-common-depends-on

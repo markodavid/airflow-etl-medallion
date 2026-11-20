@@ -259,6 +259,7 @@ docker compose down -v                   # detener y BORRAR la BD de Airflow
 | `FileNotFoundError: /opt/airflow/data/...` | Estás usando rutas de Windows dentro del contenedor |
 | `docker compose up` falla por memoria | Subí la RAM de Docker Desktop (Settings → Resources) |
 | Docker Desktop se cuelga y `docker ps` no responde | Casi siempre **disco lleno**: `Get-PSDrive C`, `docker system df`, `docker builder prune` |
+| La primera tarea falla con `Could not reach the Execution API server` tras reiniciar | Arranque en frío: el api-server todavía está importando el DAG. `retries` la recupera en el segundo intento |
 | Pylance subraya `from airflow.sdk import DAG` | Normal: tu Python de Windows no tiene Airflow |
 | Quedó un DAG eliminado en la UI | `docker compose exec airflow-scheduler airflow dags delete --yes <dag_id>` |
 
