@@ -18,7 +18,7 @@ from pathlib import Path
 import pandas as pd
 from airflow.sdk import DAG, task
 
-INCLUDE_DIR = Path(os.getenv("MEDALLON_INCLUDE_DIR", "/opt/airflow/include"))
+INCLUDE_DIR = Path(os.getenv("PIPELINE_INCLUDE_DIR", "/opt/airflow/include"))
 if str(INCLUDE_DIR) not in sys.path:
     sys.path.insert(0, str(INCLUDE_DIR))
 

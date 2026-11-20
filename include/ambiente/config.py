@@ -11,9 +11,7 @@ import os
 from pathlib import Path
 
 # --- Rutas -----------------------------------------------------------------
-DATA_DIR = Path(
-    os.getenv("DATA_DIR") or os.getenv("MEDALLON_DATA_DIR", "/opt/airflow/data")
-)
+DATA_DIR = Path(os.getenv("DATA_DIR", "/opt/airflow/data"))
 AIRE_DIR = DATA_DIR / "aire"
 
 BRONZE_DIR = AIRE_DIR / "bronze"

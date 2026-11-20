@@ -9,12 +9,6 @@ plugins/*
 !plugins/.gitkeep
 
 # Artefactos del pipeline (se regeneran en cada ejecucion)
-data/silver/*
-!data/silver/.gitkeep
-data/gold/*
-!data/gold/.gitkeep
-data/warehouse/*
-!data/warehouse/.gitkeep
 data/aire/bronze/*
 !data/aire/bronze/.gitkeep
 data/aire/silver/*
