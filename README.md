@@ -126,6 +126,32 @@ docker compose up airflow-init
 El DAG aparece activo y corre solo todos los días a las **06:00 de Bogotá**
 (`AIRFLOW__CORE__DEFAULT_TIMEZONE`).
 
+### Capturas
+
+**Panel de control** — salud de los servicios, DAGs por estado y ejecuciones de las últimas 24 horas.
+
+![Panel de control de Airflow](docs/capturas/01-panel.png)
+
+**Lista de DAGs** — programación, última y próxima ejecución, y el historial de corridas.
+
+![Lista de DAGs](docs/capturas/02-dags.png)
+
+**Detalle del DAG** — estadísticas: tareas y ejecuciones fallidas, duración de las últimas 10 corridas y las instancias de tarea más lentas.
+
+![Detalle del DAG con estadísticas](docs/capturas/03-dag-detalle.png)
+
+**Grafo de una ejecución** — las cinco tareas en verde y el panel lateral con duración, tipo de ejecución y usuario.
+
+![Grafo de la ejecución del DAG](docs/capturas/04-grafo.png)
+
+**Cómo se dispara** — botón `Trigger` → modal con *Ejecución Única* o *Backfill* y `Configuración JSON` (por ejemplo `{"dias": 90}`).
+
+![Modal para activar el DAG](docs/capturas/06-trigger.png)
+
+**Logs de una tarea** — la ventana de 90 días y las 2.160 horas descargadas.
+
+![Log de la tarea extraer_bronze](docs/capturas/05-log.png)
+
 ---
 
 ## 5. Qué hace cada tarea
