@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "receiptId": "63fc706a-3358-4e94-a130-e6b22abf5ec9",
+  "status": "current",
+  "command": "deliver",
+  "type": "dataflow",
+  "input": "C:\\Users\\marko\\OneDrive\\Documentos\\Marko\\UAO\\Semestre 3\\Gerencia de Proyectos\\airflow\\.archify\\dataflow-arquitectura-20261122-094814\\candidate.json",
+  "output": "C:\\Users\\marko\\OneDrive\\Documentos\\Marko\\UAO\\Semestre 3\\Gerencia de Proyectos\\airflow\\docs\\arquitectura.html",
+  "specification": {
+    "sha256": "07858ef2e949ba4cecd8b2dffe2805d3e6d383a5555b3958ad3016e3d348f48c",
+    "bytes": 3782
+  },
+  "artifact": {
+    "sha256": "f3e8bd92676c59e38fb15e3f7a4d361377c4e311ee4a260dc886d534db16592f",
+    "bytes": 836414
+  }
+}

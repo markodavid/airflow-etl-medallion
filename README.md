@@ -7,6 +7,8 @@ data warehouse SQLite.
 
 No requiere instalar Ubuntu a mano ni `pip install apache-airflow`.
 
+**Infraestructura** (Docker Desktop con backend WSL2):
+
 ```
 Windows
   └── Docker Desktop (backend WSL2)
@@ -15,11 +17,15 @@ Windows
         ├── airflow-scheduler     ← decide qué tarea corre y cuándo
         ├── airflow-dag-processor ← lee y valida los DAGs
         └── airflow-triggerer     ← tareas diferidas
-
-DAG calidad_aire_cali_etl
-  extraer_bronze → validar_bronze → transformar_a_silver → integrar_a_gold → cargar_datawarehouse
-      JSON crudo  ──▶  validación  ──▶  tabla tidy      ──▶  diario + reglas ──▶  SQLite
 ```
+
+**Linaje del dato** — [abrir el diagrama interactivo](docs/arquitectura.html):
+
+![Arquitectura del pipeline: Open-Meteo, capas Bronze, Silver y Gold, y warehouse SQLite](docs/arquitectura.png)
+
+El DAG `calidad_aire_cali_etl` encadena las cinco tareas
+`extraer_bronze → validar_bronze → transformar_a_silver → integrar_a_gold → cargar_datawarehouse`
+una vez al día, con una ventana móvil de 90 días.
 
 ---
 
@@ -105,15 +111,15 @@ docker compose ps
 
 <http://localhost:8081>
 
-| usuario | contraseña |
-|---|---|
-| `airflow` | `airflow` |
+Las credenciales **no están en el repositorio**: se definen en tu `.env` local
+(`_AIRFLOW_WWW_USER_USERNAME` / `_AIRFLOW_WWW_USER_PASSWORD`). Si clonás el
+proyecto, copiá `.env.example` a `.env` y elegí usuario y contraseña antes de
+correr `airflow-init`.
 
-Se cambian en `.env` (`_AIRFLOW_WWW_USER_USERNAME` / `_AIRFLOW_WWW_USER_PASSWORD`)
-**antes** de correr `airflow-init`; si el usuario ya existe hay que borrarlo:
+Si el usuario ya existe y querés cambiarlo:
 
 ```powershell
-docker compose exec airflow-scheduler airflow users delete --username airflow
+docker compose exec airflow-scheduler airflow users delete --username <tu_usuario>
 docker compose up airflow-init
 ```
 

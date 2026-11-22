@@ -26,6 +26,9 @@ venv/
 .pytest_cache/
 .ruff_cache/
 
+# Archify: se conserva candidate.json, no los recibos de revisión
+.archify/**/review-*/
+
 # Editores / sistema
 .vscode/
 .idea/

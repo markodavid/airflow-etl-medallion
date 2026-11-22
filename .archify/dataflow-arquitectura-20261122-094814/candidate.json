@@ -1,0 +1,157 @@
+{
+  "schema_version": 1,
+  "diagram_type": "dataflow",
+  "meta": {
+    "title": "Arquitectura del pipeline de calidad del aire",
+    "locale": "es",
+    "output": "docs/arquitectura.html",
+    "quality_profile": "showcase"
+  },
+  "stages": [
+    {
+      "label": "Fuente"
+    },
+    {
+      "label": "Bronze"
+    },
+    {
+      "label": "Silver"
+    },
+    {
+      "label": "Gold"
+    },
+    {
+      "label": "Warehouse"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "api",
+      "type": "cloud",
+      "label": "Open-Meteo",
+      "sublabel": "Air Quality API",
+      "tag": "sin API key",
+      "stage": 0,
+      "row": 0
+    },
+    {
+      "id": "bronze",
+      "type": "database",
+      "label": "Bronze",
+      "sublabel": "JSON crudo",
+      "tag": "2.160 h",
+      "stage": 1,
+      "row": 0
+    },
+    {
+      "id": "silver",
+      "type": "database",
+      "label": "Silver",
+      "sublabel": "tabla tidy",
+      "tag": "17.280 filas",
+      "stage": 2,
+      "row": 0
+    },
+    {
+      "id": "gold",
+      "type": "database",
+      "label": "Gold",
+      "sublabel": "agregado diario",
+      "tag": "90 filas",
+      "stage": 3,
+      "row": 0
+    },
+    {
+      "id": "dw",
+      "type": "database",
+      "label": "warehouse.db",
+      "sublabel": "SQLite",
+      "tag": "gold_calidad_aire",
+      "stage": 4,
+      "row": 0
+    },
+    {
+      "id": "consumer",
+      "type": "backend",
+      "label": "Consumidores",
+      "sublabel": "BI y alertas",
+      "tag": "SQL",
+      "stage": 4,
+      "row": 1
+    }
+  ],
+  "flows": [
+    {
+      "id": "json-horario",
+      "from": "api",
+      "to": "bronze",
+      "label": "JSON por hora",
+      "classification": "8 variables · 2.160 h",
+      "variant": "emphasis"
+    },
+    {
+      "id": "aplanado",
+      "from": "bronze",
+      "to": "silver",
+      "label": "aplanado",
+      "classification": "rangos y flag de calidad",
+      "variant": "emphasis"
+    },
+    {
+      "id": "agrega-dia",
+      "from": "silver",
+      "to": "gold",
+      "label": "agrega por día",
+      "classification": "promedio · máximo · p95",
+      "variant": "emphasis"
+    },
+    {
+      "id": "upsert",
+      "from": "gold",
+      "to": "dw",
+      "label": "upsert",
+      "classification": "reemplaza por fecha",
+      "variant": "emphasis"
+    },
+    {
+      "id": "consulta",
+      "from": "dw",
+      "to": "consumer",
+      "label": "consulta SQL",
+      "classification": "solo lectura",
+      "variant": "default"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "emerald",
+      "title": "Orquestación",
+      "items": [
+        "Apache Airflow 3.4 con LocalExecutor sobre Docker Desktop (WSL2)",
+        "Cinco tareas encadenadas: extraer, validar, silver, gold y cargar",
+        "Cron diario a las 06:00 de Bogotá, con 2 reintentos por tarea",
+        "El DAG ordena; no transforma: cada capa vive en include/ambiente"
+      ]
+    },
+    {
+      "dot": "orange",
+      "title": "Contratos por capa",
+      "items": [
+        "Bronze guarda el JSON tal como llega, con marca de tiempo",
+        "Silver: 24 horas × 8 variables × 90 días = 17.280 filas",
+        "Gold: 90 filas × 29 columnas, una por día",
+        "El warehouse hace upsert por fecha: reejecutar no duplica"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Reglas de negocio",
+      "items": [
+        "OMS 2021: 15 µg/m³ de PM2.5 y 45 µg/m³ de PM10 en 24 horas",
+        "Categoría AQI de la EPA y nivel de alerta por día",
+        "Últimos 90 días: 68 sin alerta, 21 baja y 1 media",
+        "El día en alerta media promedió 14,26 pero tuvo un pico de 38,5"
+      ]
+    }
+  ]
+}
