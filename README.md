@@ -160,6 +160,57 @@ fecha | pm2_5_promedio | pm2_5_maximo | pm2_5_p95 | pm2_5_horas | … | aqi_us_m
 excede_oms_pm2_5 | excede_oms_pm10 | categoria_aqi | nivel_alerta
 ```
 
+### Por qué Silver tiene 17.280 filas y Gold solo 90
+
+No se pierde información: **cambia el grano** (qué representa una fila).
+
+| Capa | Una fila es… | Tamaño con 90 días |
+|---|---|---|
+| Bronze | el JSON completo de la API | 2.160 horas × 8 variables |
+| Silver | **una variable en una hora** | 17.280 filas × 5 columnas |
+| Gold | **un día completo** | 90 filas × 29 columnas |
+
+```
+17.280 filas ÷ 90 días = 192 filas por día
+192 = 24 horas × 8 variables
+```
+
+Esas 192 filas diarias se condensan en una porque cada variable resume sus 24
+valores horarios en 4 números (`construir_gold()` en `gold_aire.py`):
+
+```python
+groupby("fecha")["valor"].agg(
+    promedio="mean",      # tendencia del día
+    maximo="max",         # el pico, que el promedio esconde
+    p95=lambda s: s.quantile(0.95),   # pico sostenido
+    horas="count",        # cobertura: 24 = día completo
+)
+```
+
+6 variables agregadas × 4 métricas = 24 columnas, más `fecha` y 4 columnas de
+reglas → 29 columnas en una sola fila.
+
+**Ejemplo real (2026-10-08, `pm2_5`)**: 24 valores horarios en Silver
+(`7.1, 7.8, 9.4 … 35.6, 38.5, 38.3, 34.9`) se convierten en una fila de Gold:
+`promedio=14.26 · maximo=38.5 · p95=38.3 · horas=24`. El promedio queda por
+debajo del umbral OMS, pero el pico de la noche no: por eso Gold guarda las
+cuatro métricas y no solo el promedio.
+
+Dos reducciones menores adicionales:
+
+- **`aqi_europa` no se agrega**: se queda en Silver porque las reglas de negocio
+  usan `aqi_us`.
+- **Se filtran las filas con `calidad != "OK"`** antes de agregar, para que un
+  valor fuera de rango no contamine el promedio diario.
+
+El detalle horario sigue disponible en Silver (y el crudo en Bronze), así que
+Gold se puede recalcular sin volver a llamar a la API.
+
+| Si querés… | Consultá |
+|---|---|
+| una serie horaria, auditar un pico puntual, reprocesar | **Silver** |
+| KPIs diarios, alertas, Power BI, comparar meses | **Gold** |
+
 ## 7. Reglas de negocio
 
 | Regla | Definición |
