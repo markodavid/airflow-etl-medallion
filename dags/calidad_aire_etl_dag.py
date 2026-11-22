@@ -39,7 +39,8 @@ from ambiente.src.transform.clean_aire import (  # noqa: E402
 )
 from ambiente.src.transform.gold_aire import construir_gold  # noqa: E402
 
-DIAS_POR_DEFECTO = 7
+# Ventana por defecto: 90 dias (~3 meses). El tope de la API es 92 (DIAS_MAXIMOS).
+DIAS_POR_DEFECTO = 90
 
 default_args = {
     "owner": "gerencia-de-proyectos",

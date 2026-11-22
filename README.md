@@ -128,7 +128,7 @@ El DAG aparece activo y corre solo todos los días a las **06:00 de Bogotá**
 |---|---|---|---|
 | `extraer_bronze` | Bronze | GET a Open-Meteo (`past_days=N`, sin pronóstico) y guarda el JSON **tal como llega**, con marca de tiempo | `bronze/calidad_aire_<marca>.json` |
 | `validar_bronze` | Bronze | Verifica `hourly.time`, que estén las 8 variables, largos consistentes y que ninguna serie sea 100% nula | métricas al XCom |
-| `transformar_a_silver` | Silver | JSON anidado → tabla tidy (una fila por hora y variable), rangos físicos, flags de calidad, dedupe | `silver/*.csv` (1.344 filas por 7 días) |
+| `transformar_a_silver` | Silver | JSON anidado → tabla tidy (una fila por hora y variable), rangos físicos, flags de calidad, dedupe | `silver/*.csv` (≈17.280 filas por 90 días) |
 | `integrar_a_gold` | Gold | Agrupa por día: promedio, máximo, p95 y horas válidas; aplica OMS 2021 y categorías AQI | `gold/*.csv` (1 fila por día) |
 | `cargar_datawarehouse` | DW | Upsert por `fecha`: reemplaza los días ya existentes, inserta los nuevos, verifica el conteo | tabla `gold_calidad_aire` |
 
@@ -177,7 +177,7 @@ rangos, `OMS_PM2_5_24H`, `OMS_PM10_24H` y `CATEGORIAS_AQI`.
 ## 8. Ejecutar, programar y reprocesar
 
 ```powershell
-# ventana por defecto (7 días)
+# ventana por defecto (90 días ≈ 3 meses)
 docker compose exec airflow-scheduler airflow dags trigger calidad_aire_cali_etl
 
 # ventana explícita (1 a 92 días)
@@ -199,7 +199,9 @@ schedule=None           # solo manual
 ```
 
 `catchup=False` evita que Airflow rellene días pasados al activar la programación.
-Para backfill usá la ventana `dias=92` (máximo de la API).
+La ventana por defecto es de **90 días (~3 meses)**; el máximo que permite la API
+es 92 (`DIAS_MAXIMOS` en `config.py`). Cada corrida diaria vuelve a pedir los
+últimos 90 días y el upsert reemplaza solo las fechas nuevas, sin duplicar.
 
 ---
 
