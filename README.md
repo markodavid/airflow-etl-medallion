@@ -333,24 +333,7 @@ docker compose down -v                   # detener y BORRAR la BD de Airflow
 
 ---
 
-## 12. Problemas frecuentes
-
-| Síntoma | Causa / solución |
-|---|---|
-| El DAG no aparece | `airflow dags list-import-errors` en el scheduler |
-| `ModuleNotFoundError: No module named 'ambiente'` | Falta `PYTHONPATH=/opt/airflow/include` o el volumen `include/` |
-| `ModuleNotFoundError: No module named 'requests'` | Agregalo a `requirements-airflow.txt` y reconstruí |
-| `requests.exceptions.ConnectionError` | El contenedor no tiene salida a internet, o Open-Meteo está caído |
-| `FileNotFoundError: /opt/airflow/data/...` | Estás usando rutas de Windows dentro del contenedor |
-| `docker compose up` falla por memoria | Subí la RAM de Docker Desktop (Settings → Resources) |
-| Docker Desktop se cuelga y `docker ps` no responde | Casi siempre **disco lleno**: `Get-PSDrive C`, `docker system df`, `docker builder prune` |
-| La primera tarea falla con `Could not reach the Execution API server` tras reiniciar | Arranque en frío: el api-server todavía está importando el DAG. `retries` la recupera en el segundo intento |
-| Pylance subraya `from airflow.sdk import DAG` | Normal: tu Python de Windows no tiene Airflow |
-| Quedó un DAG eliminado en la UI | `docker compose exec airflow-scheduler airflow dags delete --yes <dag_id>` |
-
----
-
-## 13. Advertencias del equipo
+## 12. Advertencias del equipo
 
 **OneDrive.** El proyecto vive en `OneDrive\Documentos`. Los bind mounts de
 `dags/`, `logs/` y `data/` sobre una carpeta sincronizada pueden dar lentitud,
@@ -378,7 +361,7 @@ disk"*).
 
 ---
 
-## 14. Fuente de datos
+## 13. Fuente de datos
 
 **Open-Meteo Air Quality API** — <https://open-meteo.com/en/docs/air-quality-api>
 
@@ -399,7 +382,7 @@ AIRE_CIUDAD=Bogotá ; AIRE_LATITUD=4.711 ; AIRE_LONGITUD=-74.0721
 
 ---
 
-## 15. Siguientes pasos
+## 14. Siguientes pasos
 
 - Añadir un `@task.branch` para enrutar según `nivel_alerta`.
 - Notificar cuando `nivel_alerta = ALTA` (webhook a n8n, correo o WhatsApp).
