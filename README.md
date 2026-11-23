@@ -1,7 +1,7 @@
 # Calidad del aire en Cali — ETL Medallion con Airflow 3 y Docker
 
 > **Elaborado por:** Marko David García, Alejandro Meneses y Henry Rosenstihel
-> **Materia:** Gerencia de Proyectos en IA — docente Juan Manuel Núñez Velasco
+> **Materia:** Gerencia de Proyectos en IA — Docente Juan Manuel Núñez Velasco
 > **Universidad Autónoma de Occidente**
 
 Pipeline de datos ambientales con **arquitectura Medallion** sobre **Apache
